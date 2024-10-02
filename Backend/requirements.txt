@@ -1,0 +1,7 @@
+flask-security-too
+Flask-Cors
+flask-restful
+flask 
+Flask-SQLAlchemy
+setuptools
+argon2_cffi
