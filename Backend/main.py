@@ -36,6 +36,21 @@ def create_app():
 
 app, api = create_app()
 
+from applications.auth_apis import *
+
+api.add_resource(UserRegistration, '/register')
+api.add_resource(UserLogin, '/login')
+api.add_resource(UserLogout, '/logout')
+
+
+# api.add_resource(UserRegistration, '/user_registration/<int:username>')
+# api.add_resource(UserRegistration, '/user_registration')
+
+from applications.crud_apis import *
+api.add_resource(AllStoreManager, '/store_managers')
+api.add_resource(ApproveStoreManager, '/approve_store_manager/<string:username>')
+
+
 if __name__ == '__main__':
     app.run(debug=True)
     
