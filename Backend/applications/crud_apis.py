@@ -120,5 +120,159 @@ class Category(Resource):
                 return make_response(jsonify({'message': 'Category added successfully'}), 201)
             except Exception as e:
                 return make_response(jsonify({'message': 'Internal Server Error'}), 500)
+            
+    @auth_token_required
+    @roles_accepted('admin','store_manager')
+    def put(self,category_id):
+        request_data = request.get_json()
 
+        new_category_name = request_data.get('category_name', None)
+        new_category_description = request_data.get('category_description', None)
+
+        if not new_category_name and not new_category_description:
+            return make_response(jsonify({'message': 'Update request can\'t be empty'}), 400)
         
+        category = Categories.query.get(category_id)
+        if not category:
+            return make_response(jsonify({'message': 'Category not found'}), 404)
+        
+        if current_user.has_role('store_manager'):
+            if not current_user.is_approved:
+                return make_response(jsonify({'message': 'Store Manager is not approved yet'}), 401)
+            
+            try:
+                new_category_request = Requests(username = current_user.username,
+                                                request_type = 'update_category',
+                                                request_date = datetime.now(),
+                                                status = 'pending',
+                                                category_id = category_id,
+                                                new_category_name = new_category_name,
+                                                new_category_description = new_category_description)
+                db.session.add(new_category_request)
+                db.session.commit()
+                return make_response(jsonify({'message': 'Request sent successfully'}), 201)
+            except Exception as e:
+                return make_response(jsonify({'message': 'Internal Server Error'}), 500)
+        else:
+            if new_category_name:
+                category.category_name = new_category_name
+            if new_category_description:
+                category.category_description = new_category_description
+            db.session.commit()
+            return make_response(jsonify({'message': 'Category updated successfully'}), 200)
+        
+    @auth_token_required
+    @roles_accepted('admin','store_manager')
+    def delete(self,category_id):
+        category = Categories.query.get(category_id)
+        if not category:
+            return make_response(jsonify({'message': 'Category not found'}), 404)
+        
+        if current_user.has_role('store_manager'):
+            if not current_user.is_approved:
+                return make_response(jsonify({'message': 'Store Manager is not approved yet'}), 401)
+            
+            try:
+                new_category_request = Requests(username = current_user.username,
+                                                request_type = 'delete_category',
+                                                request_date = datetime.now(),
+                                                status = 'pending',
+                                                category_id = category_id)
+                db.session.add(new_category_request)
+                db.session.commit()
+                return make_response(jsonify({'message': 'Request sent successfully'}), 201)
+            except Exception as e:
+                return make_response(jsonify({'message': 'Internal Server Error'}), 500)
+        else:  
+            db.session.delete(category)
+            db.session.commit()
+            return make_response(jsonify({'message': 'Category deleted successfully'}), 200) 
+        
+class AllApprovalRequests:
+    @auth_token_required
+    @roles_required('admin')
+    def get(self):
+        requests = Requests.query.all()
+        final_response = []
+        for i in requests:
+            response = {
+                'request_id': i.request_id,
+                'username': i.username,
+                'request_type': i.request_type,
+                'request_date': i.request_date,
+                'status': i.status,
+                'new_category_name': i.new_category_name,
+                'new_category_description': i.new_category_description
+            }
+            final_response.append(response)
+        return make_response(jsonify(final_response), 200)
+
+class ApprovalRequest:
+    @auth_token_required
+    @roles_required('admin')
+    def get(self, request_id):
+        approval_request = Requests.query.get(request_id)
+        if not approval_request:
+            return make_response(jsonify({'message': 'Request not found'}), 404)
+        response = {
+            'request_id': i.request_id,
+                'username': i.username,
+                'request_type': i.request_type,
+                'request_date': i.request_date,
+                'status': i.status,
+                'new_category_name': i.new_category_name,
+                'new_category_description': i.new_category_description
+            }
+        return make_response(jsonify(response), 200)
+    
+    @auth_token_required
+    @roles_required('admin')
+    def post(self,request_id):
+        approval_request = Requests.query.get(request_id)
+        if not approval_request:
+            return make_response(jsonify({'message': 'Request not found'}), 404)
+        
+        if approval_request.request_type == 'update_category':
+            category = Categories.query.get(approval_request.category_id)
+            if not category:
+                request.status = 'rejected'
+                db.session.commit()
+                return make_response(jsonify({'message': 'Request Rejected. Category not found'}), 400)
+            category = Categories.query.filter_by(category_name=approval_request.new_category_name).first()
+            if category:
+                request.status = 'rejected'
+                db.session.commit()
+                return make_response(jsonify({'message': 'Request Rejected. Category already exists'}), 400)
+            if approval_request.new_category_name:
+                category.category_name = approval_request.new_category_name
+
+            if approval_request.new_category_description:
+                category.category_description = approval_request.new_category_description
+
+            approval_request.status = 'approved'
+
+            db.session.commit()
+        
+        elif approval_request.request_type == 'delete_category':
+            category = Categories.query.get(approval_request.category_id)
+            if not category:
+                request.status = 'rejected'
+                db.session.commit()
+                return make_response(jsonify({'message': 'Request Rejected. Category not found'}), 400)
+            db.session.delete(category)  
+            approval_request.status = 'approved'
+            db.session.commit()
+            return make_response(jsonify({'message': 'Request Approved'}), 200)   
+        else:
+            category = Categories.query.filter_by(category_name=approval_request.new_category_name).first()
+            if category:
+                request.status = 'rejected'
+                db.session.commit()
+                return make_response(jsonify({'message': 'Request Rejected. Category already exists'}), 400)
+            category = Categories(category_name = approval_request.new_category_name,
+                                  category_description = approval_request.new_category_description)
+            db.session.add(category)
+            approval_request.status = 'approved'
+            db.session.commit()
+            return make_response(jsonify({'message': 'Request Approved'}), 200)
+
