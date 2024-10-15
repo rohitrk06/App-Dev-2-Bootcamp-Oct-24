@@ -5,6 +5,7 @@ from applications.models import *
 from flask_restful import Api
 from flask_security import Security, hash_password
 from applications.user_datastore import user_datastore
+from flask_cors import CORS
 
 def create_app():
     app = Flask(__name__)
@@ -35,7 +36,7 @@ def create_app():
 
 
 app, api = create_app()
-
+CORS(app)
 from applications.auth_apis import *
 
 api.add_resource(UserRegistration, '/register')
