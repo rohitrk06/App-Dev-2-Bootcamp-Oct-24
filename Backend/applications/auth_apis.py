@@ -3,6 +3,7 @@ from flask import jsonify, request, make_response
 from flask_security import hash_password, utils, auth_token_required
 from applications.user_datastore import user_datastore
 from applications.database import db
+from applications.models import User
 
 
 class UserRegistration(Resource):
@@ -69,6 +70,23 @@ class UserRegistration(Resource):
             }
             return make_response(jsonify(response), 500)
 
+class VerifyUser(Resource):
+    def post(self):
+        request_data = request.get_json()
+
+        username = request_data.get('username', None)
+        email = request_data.get('email', None)
+
+        if username:
+            user = User.query.filter_by(username=username).first()
+            if user:
+                return make_response(jsonify({'message': 'Username already exists'}), 405)
+            
+        if email:
+            user = User.query.filter_by(email=email).first()
+            if user:
+                return make_response(jsonify({'message': 'Email already exists'}), 405)
+        return make_response(jsonify({'message': 'Username  is available'}), 200)
 
 class UserLogin(Resource):
     def post(self):

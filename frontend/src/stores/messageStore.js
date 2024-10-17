@@ -1,7 +1,7 @@
 import {ref, computed} from 'vue'
 import {defineStore} from 'pinia'
 
-export const useMessageStore = defineStore('auth', () => {
+export const useMessageStore = defineStore('message_store', () => {
     const flash_message = ref('')
 
     function setFlashMessage(message){

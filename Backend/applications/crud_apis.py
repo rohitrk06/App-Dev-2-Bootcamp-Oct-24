@@ -5,6 +5,7 @@ from applications.models import *
 from flask_security import auth_token_required, roles_accepted, roles_required, current_user
 from datetime import datetime
 
+
 class AllStoreManager(Resource):
     @auth_token_required
     @roles_required('admin')

@@ -2,10 +2,10 @@
 
 import { computed, ref } from 'vue';
 import { useMessageStore } from '@/stores/messageStore';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/stores/auth_store';
 
 const password = ref('');
-const email = ref('');
+const username = ref('');
 
 const messageStore = useMessageStore();
 const authStore = useAuthStore();
@@ -14,12 +14,12 @@ const backend_url = computed(() => authStore.getBackendServerURL());
 
 async function login() {
     const input_data = {
-        email: email.value,
+        username: username.value,
         password: password.value
     }
     console.log(input_data);    
     
-    const response = await fetch(`${backend_url}/api/v1/login`,{
+    const response = await fetch(`${backend_url.value}/api/v1/login`,{
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -27,7 +27,22 @@ async function login() {
         },
         body: JSON.stringify(input_data)
     })
-    console.log(response);
+    if (response.ok){
+        const data = await response.json();
+        console.log(data);
+        messageStore.setFlashMessage(data.message);
+        localStorage.setItem('auth_token', data.login_credentials.auth_token);
+        const user_details = {
+            username: data.login_credentials.username,
+            roles: data.login_credentials.roles
+        }
+        localStorage.setItem('user_details', JSON.stringify(user_details));
+        // redirect to home page
+    }
+    else{
+        const data = await response.json();
+        messageStore.setFlashMessage(data.message);
+    }
 
 }
 
@@ -39,9 +54,8 @@ async function login() {
         <div class="d-flex justify-content-center">
             <form class="w-50 justify-content-center" @submit.prevent="login">
                 <div class="mb-3">
-                    <label for="exampleInputEmail1" class="form-label">Email address</label>
-                    <input type="email" class="form-control" id="exampleInputEmail1" v-model="email">
-                    <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
+                    <label for="username" class="form-label">username</label>
+                    <input type="text" class="form-control" id="username" v-model="username">
                 </div>
                 <div class="mb-3">
                     <label for="exampleInputPassword1" class="form-label">Password</label>

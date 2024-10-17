@@ -42,6 +42,7 @@ from applications.auth_apis import *
 api.add_resource(UserRegistration, '/register')
 api.add_resource(UserLogin, '/login')
 api.add_resource(UserLogout, '/logout')
+api.add_resource(VerifyUser, '/verify_user')
 
 
 # api.add_resource(UserRegistration, '/user_registration/<int:username>')
