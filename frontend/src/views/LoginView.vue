@@ -1,11 +1,15 @@
 <script setup>
 
 import { computed, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useMessageStore } from '@/stores/messageStore';
 import { useAuthStore } from '@/stores/auth_store';
 
 const password = ref('');
 const username = ref('');
+
+
+const router = useRouter();
 
 const messageStore = useMessageStore();
 const authStore = useAuthStore();
@@ -31,13 +35,16 @@ async function login() {
         const data = await response.json();
         console.log(data);
         messageStore.setFlashMessage(data.message);
-        localStorage.setItem('auth_token', data.login_credentials.auth_token);
+        // localStorage.setItem('auth_token', data.login_credentials.auth_token);
+        authStore.setAuthToken(data.login_credentials.auth_token);
         const user_details = {
             username: data.login_credentials.username,
             roles: data.login_credentials.roles
         }
-        localStorage.setItem('user_details', JSON.stringify(user_details));
+        // localStorage.setItem('user_details', JSON.stringify(user_details));
+        authStore.setUserDetails(user_details);
         // redirect to home page
+        router.push('/');
     }
     else{
         const data = await response.json();

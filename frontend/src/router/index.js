@@ -7,6 +7,15 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/',
+      name: 'home',
+    },
+    {
+      path: '/add_category',
+      name: 'add_category',
+      component: () => import('../views/AddCategoryView.vue')
+    },
+    {
       path: '/login',
       name: 'login',
       component: LoginView

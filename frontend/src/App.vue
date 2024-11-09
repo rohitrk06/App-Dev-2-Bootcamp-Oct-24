@@ -3,10 +3,62 @@ import { RouterLink, RouterView } from 'vue-router'
 import HelloWorld from './components/HelloWorld.vue'
 import { computed } from 'vue'
 import { useMessageStore } from './stores/messageStore'
+import { useAuthStore } from './stores/auth_store'
+
+const authStore = useAuthStore()
+// const isAuthenticated = computed(() => authStore.isAuthenticated())
 
 
 const messageStore = useMessageStore()
 const message = computed(() => messageStore.getFlashMessage())
+const user_details =JSON.parse(authStore.getUserDetails())
+// const user_details =authStore.getUserDetails()
+
+function logout() {
+  //Fetch api to logout
+  fetch(`${authStore.getBackendServerURL()}/api/v1/logout`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authentication-Token': authStore.getAuthToken(),
+      'Acess-Control-Allow-Origin': '*'
+    }
+  }).then(response => response.json()).then(data => {
+    messageStore.setFlashMessage(data.message)
+  })  
+  authStore.removeAuthenticatedUser()
+  // messageStore.setFlashMessage('You have been logged out')
+}
+
+const isAdmin =  computed(()=>{
+  // user_details = authStore.getUserDetails()
+  if (authStore.isAuthenticated){
+    console.log(user_details)
+    if (user_details.roles.includes('admin')){
+      return true
+    }
+  }
+  return false
+})
+
+const isCustomer =  computed(()=>{
+  if (authStore.isAuthenticated){
+    if (user_details.roles.includes('customer')){
+    return true
+    } 
+  }
+  return false
+})
+
+const isStoreManager = computed(()=>{
+  // user_details = authStore.getUserDetails()
+  if (authStore.isAuthenticated){
+    if (user_details.roles.includes('store_manager')){
+    return true
+  }
+  } 
+  return false
+})
 
 </script>
 
@@ -19,12 +71,21 @@ const message = computed(() => messageStore.getFlashMessage())
       </button>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item">
+          <li v-if="!authStore.isAuthenticated" class="nav-item">
             <RouterLink to="/login" class="nav-link">Login</RouterLink>
           </li>
-          <li class="nav-item">
+          <li class="nav-item" v-if="!authStore.isAuthenticated">
             <RouterLink to="/register" class="nav-link">Register</RouterLink>
-          </li>          
+          </li> 
+          <li v-if="isAdmin" class="nav-item">
+            <RouterLink to="/add_category" class="nav-link">Add Category</RouterLink>
+          </li>
+          <li v-if="authStore.isAuthenticated" class="nav-item">
+            <RouterLink to="/" class="nav-link">{{user_details.username}}</RouterLink>
+          </li>
+          <li v-if="authStore.isAuthenticated" class="nav-item">
+            <button @click="logout" class="nav-link">Logout</button>
+          </li>       
         </ul>
         <form class="d-flex" role="search">
           <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">

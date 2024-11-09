@@ -51,7 +51,7 @@ api.add_resource(VerifyUser, '/verify_user')
 from applications.crud_apis import *
 api.add_resource(AllStoreManager, '/store_managers')
 api.add_resource(ApproveStoreManager, '/approve_store_manager/<string:username>')
-
+api.add_resource(Category,'/category', '/category/<int:id>')
 
 if __name__ == '__main__':
     app.run(debug=True)

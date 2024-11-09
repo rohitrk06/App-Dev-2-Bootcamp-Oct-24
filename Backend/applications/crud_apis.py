@@ -96,7 +96,7 @@ class Category(Resource):
         if category:
             return make_response(jsonify({'message': 'Category already exists'}), 400)
 
-        if current_user.has_role('store_manager'):
+        if current_user.has_role('store_manager') and not current_user.has_role('admin'):
             if not current_user.is_approved:
                 return make_response(jsonify({'message': 'Store Manager is not approved yet'}), 401)
             
@@ -137,7 +137,7 @@ class Category(Resource):
         if not category:
             return make_response(jsonify({'message': 'Category not found'}), 404)
         
-        if current_user.has_role('store_manager'):
+        if current_user.has_role('store_manager') and not current_user.has_role('admin'):
             if not current_user.is_approved:
                 return make_response(jsonify({'message': 'Store Manager is not approved yet'}), 401)
             
