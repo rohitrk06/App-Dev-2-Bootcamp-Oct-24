@@ -52,6 +52,7 @@ from applications.crud_apis import *
 api.add_resource(AllStoreManager, '/store_managers')
 api.add_resource(ApproveStoreManager, '/approve_store_manager/<string:username>')
 api.add_resource(Category,'/category', '/category/<int:id>')
+api.add_resource(ViewAllCategories, '/categories')
 
 if __name__ == '__main__':
     app.run(debug=True)

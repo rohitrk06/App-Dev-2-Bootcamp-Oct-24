@@ -50,6 +50,12 @@ function register(){
 }
 
 
+watch(username,async (newVal,oldVal) => {
+    if (newVal.length > 0){
+        fetch()
+    }
+})
+
 
 </script>
 
@@ -60,7 +66,8 @@ function register(){
             <form class="w-50 justify-content-center" @submit.prevent = 'register'>
                 <div class="mb-3">
                     <label for="username" class="form-label"><strong>Username</strong></label>
-                    <input type="text" class="form-control" id="username" aria-describedby="usernameHelp" v-model="username" @keyup="checkUsernameAvailability" required>
+                    <!-- <input type="text" class="form-control" id="username" aria-describedby="usernameHelp" v-model="username" @keyup="checkUsernameAvailability" required> -->
+                    <input type="text" class="form-control" id="username" aria-describedby="usernameHelp" v-model="username" required>
                     <div id="usernameHelp" class="form-text">{{UsernameAvailability}}</div>
                 </div>
                 <div class="mb-3">

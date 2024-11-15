@@ -6,7 +6,7 @@ import { useMessageStore } from './stores/messageStore'
 import { useAuthStore } from './stores/auth_store'
 
 const authStore = useAuthStore()
-// const isAuthenticated = computed(() => authStore.isAuthenticated())
+const isAuthenticated = computed(() => authStore.isAuthenticated)
 
 
 const messageStore = useMessageStore()
@@ -32,7 +32,7 @@ function logout() {
 
 const isAdmin =  computed(()=>{
   // user_details = authStore.getUserDetails()
-  if (authStore.isAuthenticated){
+  if (isAuthenticated.value){
     console.log(user_details)
     if (user_details.roles.includes('admin')){
       return true
@@ -42,7 +42,7 @@ const isAdmin =  computed(()=>{
 })
 
 const isCustomer =  computed(()=>{
-  if (authStore.isAuthenticated){
+  if (isAuthenticated.value){
     if (user_details.roles.includes('customer')){
     return true
     } 
@@ -52,7 +52,7 @@ const isCustomer =  computed(()=>{
 
 const isStoreManager = computed(()=>{
   // user_details = authStore.getUserDetails()
-  if (authStore.isAuthenticated){
+  if (isAuthenticated.value){
     if (user_details.roles.includes('store_manager')){
     return true
   }
@@ -71,19 +71,19 @@ const isStoreManager = computed(()=>{
       </button>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li v-if="!authStore.isAuthenticated" class="nav-item">
+          <li v-if="!isAuthenticated" class="nav-item">
             <RouterLink to="/login" class="nav-link">Login</RouterLink>
           </li>
-          <li class="nav-item" v-if="!authStore.isAuthenticated">
+          <li class="nav-item" v-if="!isAuthenticated">
             <RouterLink to="/register" class="nav-link">Register</RouterLink>
           </li> 
           <li v-if="isAdmin" class="nav-item">
             <RouterLink to="/add_category" class="nav-link">Add Category</RouterLink>
           </li>
-          <li v-if="authStore.isAuthenticated" class="nav-item">
+          <li v-if="isAuthenticated" class="nav-item">
             <RouterLink to="/" class="nav-link">{{user_details.username}}</RouterLink>
           </li>
-          <li v-if="authStore.isAuthenticated" class="nav-item">
+          <li v-if="isAuthenticated" class="nav-item">
             <button @click="logout" class="nav-link">Logout</button>
           </li>       
         </ul>
