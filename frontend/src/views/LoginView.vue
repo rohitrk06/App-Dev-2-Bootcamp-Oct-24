@@ -10,6 +10,9 @@ const username = ref('');
 
 
 const router = useRouter();
+const route = useRoute();
+
+const category_id = ref(route.params.id);
 
 const messageStore = useMessageStore();
 const authStore = useAuthStore();

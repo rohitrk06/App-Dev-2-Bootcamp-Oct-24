@@ -6,6 +6,44 @@ from flask_security import auth_token_required, roles_accepted, roles_required, 
 from datetime import datetime
 
 
+class AddProduct(Resource): 
+    # @auth_token_required
+    # @roles_accepted('admin','store_manager')
+    def post(self):
+        request_data = request.get_json()
+
+        category_id = request_data.get('category_id', None)
+        name = request_data.get('name', None)
+        description = request_data.get('description', None)
+        selling_price = request_data.get('selling_price', None)
+        stock = request_data.get('stock', None)
+        manufacture_date = datetime.now()
+        # expiry_date = request_data.get('expiry_date', None)
+        cost_price = request_data.get('cost_price', None)
+        # image_url = request_data.get('image_url', None)
+
+        # if not category_id or not name or not description or not selling_price or not stock or not manufacture_date or not expiry_date or not cost_price or not image_url:
+        #     return make_response(jsonify({'message': 'All fields are required'}), 400)
+        
+        category = Categories.query.get(category_id)
+        if not category:
+            return make_response(jsonify({'message': 'Category not found'}), 404)
+        
+        product = Products(name = name,
+                            description = description,
+                            selling_price = selling_price,
+                            stock = stock,
+                            manufacture_date = manufacture_date,
+                            # expiry_date = expiry_date,
+                            cost_price = cost_price,
+                            # image_url = image_url
+                            category_id = category.category_id)
+        db.session.add(product)
+        db.session.commit()
+
+
+
+
 class AllStoreManager(Resource):
     @auth_token_required
     @roles_required('admin')
@@ -67,16 +105,21 @@ class ViewAllCategories(Resource):
     
 class Category(Resource):
     @auth_token_required
-    def get(self,category_id):
+    def get(self,id):
         # category = Categories.query.filter_by(category_id=category_id).first()
-        category = Categories.query.get(category_id).first()
+        category = Categories.query.get(id)
         if not category:
             return make_response(jsonify({'message': 'Category not found'}), 404)
         
         response = {
                 'category_id': category.category_id,
                 'category_name': category.category_name,
-                'category_description': category.category_description
+                'category_description': category.category_description,
+                'products':[
+                    {
+                        'product_id': j.product_id,
+                    } for j in category.products
+                ]
             }
         
         return make_response(jsonify(response), 200)
@@ -124,7 +167,7 @@ class Category(Resource):
             
     @auth_token_required
     @roles_accepted('admin','store_manager')
-    def put(self,category_id):
+    def put(self,id):
         request_data = request.get_json()
 
         new_category_name = request_data.get('category_name', None)
@@ -133,7 +176,7 @@ class Category(Resource):
         if not new_category_name and not new_category_description:
             return make_response(jsonify({'message': 'Update request can\'t be empty'}), 400)
         
-        category = Categories.query.get(category_id)
+        category = Categories.query.get(id)
         if not category:
             return make_response(jsonify({'message': 'Category not found'}), 404)
         
@@ -146,7 +189,7 @@ class Category(Resource):
                                                 request_type = 'update_category',
                                                 request_date = datetime.now(),
                                                 status = 'pending',
-                                                category_id = category_id,
+                                                category_id = id,
                                                 new_category_name = new_category_name,
                                                 new_category_description = new_category_description)
                 db.session.add(new_category_request)
@@ -164,8 +207,8 @@ class Category(Resource):
         
     @auth_token_required
     @roles_accepted('admin','store_manager')
-    def delete(self,category_id):
-        category = Categories.query.get(category_id)
+    def delete(self,id):
+        category = Categories.query.get(id)
         if not category:
             return make_response(jsonify({'message': 'Category not found'}), 404)
         
@@ -178,7 +221,7 @@ class Category(Resource):
                                                 request_type = 'delete_category',
                                                 request_date = datetime.now(),
                                                 status = 'pending',
-                                                category_id = category_id)
+                                                category_id = id)
                 db.session.add(new_category_request)
                 db.session.commit()
                 return make_response(jsonify({'message': 'Request sent successfully'}), 201)
@@ -208,23 +251,23 @@ class AllApprovalRequests:
             final_response.append(response)
         return make_response(jsonify(final_response), 200)
 
-class ApprovalRequest:
-    @auth_token_required
-    @roles_required('admin')
-    def get(self, request_id):
-        approval_request = Requests.query.get(request_id)
-        if not approval_request:
-            return make_response(jsonify({'message': 'Request not found'}), 404)
-        response = {
-            'request_id': i.request_id,
-                'username': i.username,
-                'request_type': i.request_type,
-                'request_date': i.request_date,
-                'status': i.status,
-                'new_category_name': i.new_category_name,
-                'new_category_description': i.new_category_description
-            }
-        return make_response(jsonify(response), 200)
+# class ApprovalRequest:
+#     @auth_token_required
+#     @roles_required('admin')
+#     def get(self, request_id):
+#         approval_request = Requests.query.get(request_id)
+#         if not approval_request:
+#             return make_response(jsonify({'message': 'Request not found'}), 404)
+#         response = {
+#             'request_id': i.request_id,
+#                 'username': i.username,
+#                 'request_type': i.request_type,
+#                 'request_date': i.request_date,
+#                 'status': i.status,
+#                 'new_category_name': i.new_category_name,
+#                 'new_category_description': i.new_category_description
+#             }
+#         return make_response(jsonify(response), 200)
     
     @auth_token_required
     @roles_required('admin')
